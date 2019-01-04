@@ -113,7 +113,7 @@ void place_ships(Game* g, Setter* s, int size, int start_row, int start_col, int
     //     cout  <<  '\t' << itr->first 
     //           <<  '\t' << "(" << itr->second.first << ", " << itr->second.second << ")" << '\n'; 
     // } 
-    // cout << endl;
+    // cout << "\n";
 	
 
 }
@@ -182,7 +182,7 @@ void play_game()
 		{
 		    cin.clear();
 		    cin.ignore();
-		    cout << "Invalid input." << endl;
+		    cout << "Invalid input.\n";
 		    continue;
 		}
 		if((setter.ships_available).count(size) == 0)
@@ -261,7 +261,7 @@ void play_game()
         	continue;
         }
 
-        cout << endl;
+        cout << "\n";
 
 		enter_continue();
 		system("printf \"\033c\"");
