@@ -52,8 +52,13 @@ struct Setter
 
 void show_board(Game* g);
 void show_setter(Setter* s);
+void show_rem_ships(Setter* s);
+
 void determine_ship(Game* g, Setter* s, int row, int col);
+
 void enter_continue();
+void clear_screen();
+
 int game_over(Game* g);
 int setter_over(Setter* s);
 
@@ -169,12 +174,16 @@ void play_game()
 	setter.ships_available[4] = 1;
 	setter.ships_available[5] = 1;
 
-	system("printf \"\033c\""); // Clears the screen completely
-	cout << "========================\n";
-	cout << " Welcome to Battleships \n";
-	cout << "========================\n";
+	clear_screen(); // Clears the screen completely
+	cout << "========================\n"
+		 << " Welcome to Battleships \n"
+		 << "========================\n\n";
+	enter_continue();
+	clear_screen();
 	while(setter_state == 0)
 	{
+		show_setter(&setter);
+		show_rem_ships(&setter);
 		cout << "\n";
 		cout << "Ship size (2, 3, 4, or 5): ";
 		cin >> size;
@@ -183,16 +192,22 @@ void play_game()
 		    cin.clear();
 		    cin.ignore();
 		    cout << "Invalid input.\n";
+			enter_continue();
+			clear_screen();
 		    continue;
 		}
 		if((setter.ships_available).count(size) == 0)
 		{
 			cout << "Invalid size.\n";
+			enter_continue();
+			clear_screen();
 			continue;
 		}
 		if ((setter.ships_available)[size] == 0)
 		{
 			cout << "No more ships of that size.\n";
+			enter_continue();
+			clear_screen();
 			continue;
 		}
 		cout << "\n";
@@ -204,6 +219,8 @@ void play_game()
 			cin.clear();
 			cin.ignore(10000, '\n');
 			cout << "Please insert integer values only.\n";
+			enter_continue();
+			clear_screen();
 			continue;
 		}
 
@@ -214,6 +231,8 @@ void play_game()
 			cin.clear();
 			cin.ignore(10000, '\n');
 			cout << "Please insert integer values only.\n";
+			enter_continue();
+			clear_screen();
 			continue;
 		}
 
@@ -223,15 +242,16 @@ void play_game()
 		}
 		catch(...)
 		{
+			enter_continue();
+			clear_screen();
 			continue;
 		}
-		system("printf \"\033c\"");
-		show_setter(&setter);
+		clear_screen();
 		setter_state = setter_over(&setter);
 	}
 
 
-	system("printf \"\033c\"");
+	clear_screen();
 	cout << "Let's play!\n\n";
 	while(game_state == 0)
 	{
@@ -245,7 +265,7 @@ void play_game()
 			cin.ignore(10000, '\n');
 			cout << "Please insert integer values only.\n";
 			enter_continue();
-			system("printf \"\033c\"");
+			clear_screen();
 			continue;
 		}
 
@@ -257,14 +277,14 @@ void play_game()
         {
         	cout << "Invalid move.\n\n";
 			enter_continue();
-			system("printf \"\033c\"");
+			clear_screen();
         	continue;
         }
 
         cout << "\n";
 
 		enter_continue();
-		system("printf \"\033c\"");
+		clear_screen();
         game_state = game_over(&game);
 	}
 }
@@ -294,6 +314,20 @@ void show_setter(Setter* s)
 			cout << s -> board[row][col] << " ";
 		}
 		cout << "\n";
+	}
+	cout << "\n";
+}
+
+void show_rem_ships(Setter* s)
+{
+	map<int, int> :: iterator itr;
+	cout << "\n=================\n"
+		 << " Remaining Ships "
+		 << "\n=================\n\n"
+		 << "Size\tQuantity\n\n";
+	for (itr = s -> ships_available.begin(); itr != s -> ships_available.end(); ++itr)
+	{
+		cout << itr -> first << "\t" << itr -> second << "\n";
 	}
 	cout << "\n";
 }
@@ -343,10 +377,15 @@ void determine_ship(Game* g, Setter* s, int row, int col)	// Determine which shi
 /* HIT ENTER TO CONTINUE */
 void enter_continue()
 {
-    cout << "\nPress Enter to Continue\n";
+    cout << "\nPress Enter to continue\n";
     string temp;
     temp = cin.get();
     getline(cin, temp);
+}
+
+void clear_screen()
+{
+	system("printf \"\033c\"");
 }
 
 
