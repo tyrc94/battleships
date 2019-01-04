@@ -5,6 +5,8 @@
 #include <map>
 #include <cmath>
 #include <algorithm>
+#include <limits>
+
 
 using namespace std;
 
@@ -24,6 +26,7 @@ struct Game
 	};
 
 	int score = 0;
+	map <int, int> ship_remaining;
 };
 
 struct Setter
@@ -41,17 +44,20 @@ struct Setter
 		{'O','O','O','O','O','O','O','O','O','O'}
 	};
 	map<int,int> ships_available;
-	vector<vector<vector<int>>> ships_placed;
+	multimap<int,pair <int, int>> ships_placed;
+	int ship_counter = 1;
 
 };
 
 
 void show_board(Game* g);
 void show_setter(Setter* s);
+void determine_ship(Game* g, Setter* s, int row, int col);
+void enter_continue();
 int game_over(Game* g);
 int setter_over(Setter* s);
 
-void place_ships(Setter* s, int size, int start_row, int start_col, int end_row, int end_col)
+void place_ships(Game* g, Setter* s, int size, int start_row, int start_col, int end_row, int end_col)
 {
 	int board_size = s -> board.size();
 	if((start_row < 0 || start_row >= board_size)||(end_row < 0 || end_row >= board_size))
@@ -75,8 +81,6 @@ void place_ships(Setter* s, int size, int start_row, int start_col, int end_row,
 		throw new exception();
 	}
 
-	vector<vector<int>> ship;
-
 	for(int row = min(start_row, end_row); row <= max(start_row, end_row); row++)
 	{
 		for (int col = min(start_col, end_col); col <= max(start_col, end_col); col++)
@@ -84,16 +88,32 @@ void place_ships(Setter* s, int size, int start_row, int start_col, int end_row,
 			if(s -> board[row][col] == 'X')
 			{
 				cout << "There's a ship already here!\n\n";
-				ship[row].pop_back();
 				throw new exception();
 			}
 			else
 			{
+				s -> ships_placed.insert(pair<int,pair<int, int>> (s -> ship_counter, pair <int,int>(row, col)));
 				s -> board[row][col] = 'X';
+				g -> ship_remaining[s -> ship_counter] = size;
 			}
 		}
 	}
 	s -> ships_available[size]--;
+	s -> ship_counter++;
+
+	/* For debugging */
+	
+	multimap<int,pair <int, int>> :: iterator itr;
+	cout << "\nThe multimap is : \n"; 
+    cout << "\tShipID\tCoordinates\n"; 
+    for (itr = s-> ships_placed.begin(); itr != s -> ships_placed.end(); ++itr) 
+    { 
+        cout  <<  '\t' << itr->first 
+              <<  '\t' << "(" << itr->second.first << ", " << itr->second.second << ")" << '\n'; 
+    } 
+    cout << endl;
+	
+
 }
 
 void make_move(Game* g, Setter* s, int row, int col)
@@ -118,6 +138,7 @@ void make_move(Game* g, Setter* s, int row, int col)
 		g -> board[row][col] = 'X';
 		g -> score++;
 		cout << "\nHit!\n";
+		determine_ship(g, s, row, col);
 	}
 	if(s -> board[row][col] == 'O' && g -> board[row][col] == '?')
 	{
@@ -192,7 +213,7 @@ void play_game()
 
 		try
 		{
-			place_ships(&setter, size, start_row, start_col, end_row, end_col);
+			place_ships(&game, &setter, size, start_row, start_col, end_row, end_col);
 		}
 		catch(...)
 		{
@@ -204,7 +225,7 @@ void play_game()
 
 
 	system("printf \"\033c\"");	// Clear the screen completely
-	cout << "Let's play battleships!\n\n";
+	cout << "Let's play!\n\n";
 	while(game_state == 0)
 	{
 		cout << "Score: " << game.score << "\n\n";
@@ -230,6 +251,8 @@ void play_game()
 
         cout << endl;
 
+		enter_continue();
+		system("printf \"\033c\"");
         show_board(&game);
         game_state = game_over(&game);
 	}
@@ -275,7 +298,7 @@ int game_over(Game* g)
 
 int setter_over(Setter* s)
 {
-	for( auto const& x : s -> ships_available)
+	for(auto const& x : s -> ships_available)
 	{
 		if(x.second != 0)
 		{
@@ -283,6 +306,32 @@ int setter_over(Setter* s)
 		}
 	}
 	return 1;
+}
+
+
+void determine_ship(Game* g, Setter* s, int row, int col)	// Determine which ship was hit.
+{
+	multimap<int,pair <int, int>> :: iterator itr;
+    for(itr = s -> ships_placed.begin(); itr != s -> ships_placed.end(); ++itr) 
+    { 
+        if(itr -> second.first == row && itr -> second.second == col)
+		{
+			g -> ship_remaining[itr -> first]--;
+			if(g -> ship_remaining[itr -> first] == 0)
+			{
+				cout << "You sunk my battleship!\n";
+			}
+			break;
+		}
+    } 
+}
+
+void enter_continue()
+{
+    cout << "\nPress Enter to Continue\n";
+    string temp;
+    temp = cin.get();
+    getline(cin, temp);
 }
 
 int main(){
