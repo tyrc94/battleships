@@ -7,7 +7,6 @@
 #include <algorithm>
 #include <limits>
 
-
 using namespace std;
 
 struct Game
@@ -26,6 +25,7 @@ struct Game
 	};
 
 	int score = 0;
+	int moves = 0;
 	map <int, int> ship_remaining;
 };
 
@@ -57,6 +57,8 @@ void enter_continue();
 int game_over(Game* g);
 int setter_over(Setter* s);
 
+
+/* SHIP PLACEMENT */
 void place_ships(Game* g, Setter* s, int size, int start_row, int start_col, int end_row, int end_col)
 {
 	int board_size = s -> board.size();
@@ -103,19 +105,20 @@ void place_ships(Game* g, Setter* s, int size, int start_row, int start_col, int
 
 	/* For debugging */
 	
-	multimap<int,pair <int, int>> :: iterator itr;
-	cout << "\nThe multimap is : \n"; 
-    cout << "\tShipID\tCoordinates\n"; 
-    for (itr = s-> ships_placed.begin(); itr != s -> ships_placed.end(); ++itr) 
-    { 
-        cout  <<  '\t' << itr->first 
-              <<  '\t' << "(" << itr->second.first << ", " << itr->second.second << ")" << '\n'; 
-    } 
-    cout << endl;
+	// multimap<int,pair <int, int>> :: iterator itr;
+	// cout << "\nThe multimap is : \n"; 
+    // cout << "\tShipID\tCoordinates\n"; 
+    // for (itr = s-> ships_placed.begin(); itr != s -> ships_placed.end(); ++itr) 
+    // { 
+    //     cout  <<  '\t' << itr->first 
+    //           <<  '\t' << "(" << itr->second.first << ", " << itr->second.second << ")" << '\n'; 
+    // } 
+    // cout << endl;
 	
 
 }
 
+/* SHIP LOCATING (as the player) */
 void make_move(Game* g, Setter* s, int row, int col)
 {
 	int board_size = g -> board.size();
@@ -137,17 +140,20 @@ void make_move(Game* g, Setter* s, int row, int col)
 	{
 		g -> board[row][col] = 'X';
 		g -> score++;
+		g -> moves++;
 		cout << "\nHit!\n";
 		determine_ship(g, s, row, col);
 	}
 	if(s -> board[row][col] == 'O' && g -> board[row][col] == '?')
 	{
 		g -> board[row][col] = 'O';
+		g -> moves++;
 		cout << "\nMiss!\n";
 	}
 	
 }
 
+/* GAMEPLAY */
 void play_game()
 {
 	int game_state = 0;
@@ -172,11 +178,11 @@ void play_game()
 		cout << "\n";
 		cout << "Ship size (2, 3, 4, or 5): ";
 		cin >> size;
-		if(cin.fail()) // There must be a much nicer handling of this!
+		if(cin.fail())
 		{
 		    cin.clear();
 		    cin.ignore();
-		    cout << "Invalid" << endl;
+		    cout << "Invalid input." << endl;
 		    continue;
 		}
 		if((setter.ships_available).count(size) == 0)
@@ -219,16 +225,18 @@ void play_game()
 		{
 			continue;
 		}
+		system("printf \"\033c\"");
 		show_setter(&setter);
 		setter_state = setter_over(&setter);
 	}
 
 
-	system("printf \"\033c\"");	// Clear the screen completely
+	system("printf \"\033c\"");
 	cout << "Let's play!\n\n";
 	while(game_state == 0)
 	{
-		cout << "Score: " << game.score << "\n\n";
+		show_board(&game);
+		cout << "Score: " << game.score << "\t\t"<< "Moves: " << game.moves << "\n\n";
 		cout << "Coordinates (Format: <row> <column>) ";
 		cin >> row >> col;
 		if(cin.fail())
@@ -236,6 +244,8 @@ void play_game()
 			cin.clear();
 			cin.ignore(10000, '\n');
 			cout << "Please insert integer values only.\n";
+			enter_continue();
+			system("printf \"\033c\"");
 			continue;
 		}
 
@@ -246,6 +256,8 @@ void play_game()
         catch(...)
         {
         	cout << "Invalid move.\n\n";
+			enter_continue();
+			system("printf \"\033c\"");
         	continue;
         }
 
@@ -253,11 +265,11 @@ void play_game()
 
 		enter_continue();
 		system("printf \"\033c\"");
-        show_board(&game);
         game_state = game_over(&game);
 	}
 }
 
+/* BOARD DISPLAYS */
 void show_board(Game* g)
 {
 	cout << "Current state of play\n\n";
@@ -286,11 +298,13 @@ void show_setter(Setter* s)
 	cout << "\n";
 }
 
+/* EVENTS */
 int game_over(Game* g)
 {
 	if(g -> score == 17)
 	{
-		cout << "You won!";
+		cout << "You won!\n\n";
+		cout << "Score: " << g -> score << "\t\t"<< "Moves: " << g -> moves << "\n\n";
 		return 1;
 	}
 	return 0;
@@ -308,7 +322,7 @@ int setter_over(Setter* s)
 	return 1;
 }
 
-
+/* DETERMINE WHICH SHIP WAS HIT */
 void determine_ship(Game* g, Setter* s, int row, int col)	// Determine which ship was hit.
 {
 	multimap<int,pair <int, int>> :: iterator itr;
@@ -326,6 +340,7 @@ void determine_ship(Game* g, Setter* s, int row, int col)	// Determine which shi
     } 
 }
 
+/* HIT ENTER TO CONTINUE */
 void enter_continue()
 {
     cout << "\nPress Enter to Continue\n";
@@ -333,6 +348,7 @@ void enter_continue()
     temp = cin.get();
     getline(cin, temp);
 }
+
 
 int main(){
 	play_game();
